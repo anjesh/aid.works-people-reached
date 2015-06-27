@@ -1,0 +1,155 @@
+<style>
+
+body {
+  font: 12px Arial;
+}
+
+div {
+  padding: 10;
+}
+
+div.container {
+  padding-bottom: 40px;
+}
+.chart rect {
+  fill: steelblue;
+}
+
+.chart text {
+  fill: black;
+  font: 12px sans-serif;
+}
+
+.d3-tip {
+  line-height: 1.5;
+  padding: 12px;
+  background: rgba(200, 200, 200, 0.9);
+  color: #000;
+  border-radius: 2px;
+  width: 300px;
+}
+
+blockquote {
+  background: #f9f9f9;
+  border-left: 10px solid #ccc;
+  margin: 1.5em 10px;
+  padding: 0.5em 10px;
+  quotes: "\201C""\201D""\2018""\2019";
+}
+blockquote:before {
+  color: #ccc;
+  content: open-quote;
+  font-size: 4em;
+  line-height: 0.1em;
+  margin-right: 0.25em;
+  vertical-align: -0.4em;
+}
+blockquote p {
+  display: inline;
+}
+</style>
+<div class="container" align="center">
+Nepal Earthquake 2015
+<div style="width:700px;" align="left">Data for this chart is scrapped from <a href='http://aid.works/' target=blank>aid.works</a>, which is part of the article on "<a href='http://aid.works/2015/06/nepal-inflated-numbers/' target=blank>International Aid Community in Nepal Inflating Numbers of People Reached</a>"
+<blockquote>The United Nations Office for the Coordination of Humanitarian Affairs and humanitarian shelter officials report that 762,000 people have been reached with either a tent or a tarp in Nepal. Meanwhile, the aid community claims to have reached 3 million.</blockquote>
+</div>
+<svg class="chart"></svg>
+<div><a>Source</a></div>
+</div>
+<script src="lib/d3.js" charset="utf-8"></script>
+<script src="lib/d3.tip.v0.6.3.js" charset="utf-8"></script>
+
+<script>
+var w = 700;
+var h = 950;
+var barPadding = 1;
+var barheight = 20;
+
+var svg = d3.select("svg")
+                .attr("width", w)
+                .attr("height", h)
+                .attr('style', 'border:1px solid black')
+
+var tip = d3.tip()
+            .attr('class', 'd3-tip')
+            .direction('e')
+            .offset([50,20])
+            .html(function(d) {
+              return "<strong>Organisation:</strong>" + d.Organisation + "" +
+                    "<br><b>Claim</b>: " + formatn(d.Claim) +
+                    "<br>" + d.Remarks;
+            });
+
+var formatn = d3.format(",d");
+
+d3.csv('data.csv', function(error, data) {   
+  data.sort(function(a,b){return b.Claim-a.Claim})
+
+  var x = d3.scale.linear()
+                  .range([0, w-300])
+                  .domain([0, d3.max(data, function(d) { return parseInt(d.Claim); })]);
+  
+  svg.append("text")
+          .attr("x", (w / 2))             
+          .attr("y", 30)
+          .attr("text-anchor", "middle")  
+          .style("font-size", "20px") 
+          .text("Number of people these donors claim to have reached");
+
+  var bargroup = svg.append('g').attr('transform', 'translate(200,50)');
+  bargroup.selectAll('rect')
+              .data(data)
+              .enter()
+              .append("rect")
+              .attr("x", 0)
+              .attr("y", function(d,i) {
+                return i*barheight;
+              })
+              .attr("width", function(d) {
+                return x(d.Claim);
+              })
+              .attr("height",barheight-1)
+              .on('mouseover', tip.show)
+              .on('mouseout', tip.hide)
+
+  var textgroup1 = svg.append('g').attr('transform', 'translate(200,50)');
+  textgroup1.call(tip);
+  textgroup1.selectAll('text')
+              .data(data)
+              .enter()
+              .append("text")
+              .attr("x", function(d) {
+                if(parseInt(d.Claim) == 0)
+                  return "";
+                else
+                  return x(d.Claim) + 10;
+              })
+              .attr("y", function(d,i) {
+                return i*barheight + 12;
+              })
+              .text(function(d, i) {
+                if(parseInt(d.Claim) == 0)
+                  return "No Claim";
+                else
+                return formatn(d.Claim);
+              })
+              .on('mouseover', tip.show)
+              .on('mouseout', tip.hide)
+
+  var textgroup = svg.append('g').attr('transform', 'translate(10,50)');
+  textgroup.selectAll('text')
+              .data(data)
+              .enter()
+              .append("text")
+              .attr("x", 0)
+              .attr("y", function(d,i) {
+                return i*barheight + 12;
+              })
+              .attr("width", 20)
+              .text(function(d, i) {
+                return d.Organisation;
+              })
+              .on('mouseover', tip.show)              
+              .on('mouseout', tip.hide)
+  });
+</script>
