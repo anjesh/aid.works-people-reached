@@ -28,7 +28,8 @@ var ChartView = Backbone.View.extend({
     events: {
         "click #sort-by-claim": "sortByClaim",
         "click #sort-by-name": "sortByName",
-        "keyup #search-text": "searchText"
+        "keyup #search-text": "searchText",
+        "click #reset-search": "resetSearchText"
     },
     options: {
         margin: {
@@ -137,6 +138,10 @@ var ChartView = Backbone.View.extend({
         if (val.length >= 2) {
             this.filter(val.toLowerCase());
         }
+    },
+    resetSearchText: function() {
+        this.$el.find("#search-text").val('');
+        this.filter("");
     },
     filter: function(q) {
         var q = q || "";
